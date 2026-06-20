@@ -1,0 +1,30 @@
+# ── Chocolates Helena — Backend Python ──────────────────────────
+# LangChain core
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+langchain-google-genai>=2.0.0
+
+# LangGraph — Orquestación de agentes con grafos
+langgraph>=0.2.0
+
+# LangSmith — Trazabilidad y monitoreo
+langsmith>=0.1.0
+
+# Vector Store (RAG)
+faiss-cpu>=1.7.4
+
+# Embeddings (locales, sin necesidad de API extra)
+sentence-transformers>=2.7.0
+
+# Pydantic v2 — Validación y caché de datos
+pydantic>=2.0.0
+pydantic[email]
+
+# FastAPI — Servidor HTTP
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+
+# Utilidades
+python-dotenv>=1.0.0
+httpx>=0.27.0

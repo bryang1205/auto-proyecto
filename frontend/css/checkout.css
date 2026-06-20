@@ -1,0 +1,110 @@
+/* ── Checkout Layout ─────────────────────────────────────── */
+.checkout-page { min-height: 100vh; padding-top: calc(var(--nav-height) + var(--space-2xl)); padding-bottom: var(--space-3xl); }
+.checkout-grid { display: grid; grid-template-columns: 1fr 420px; gap: var(--space-xl); align-items: start; }
+
+/* ── Step Indicator ──────────────────────────────────────── */
+.step-indicator { display: flex; align-items: center; margin-bottom: var(--space-2xl); }
+.step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; }
+.step:not(:last-child)::after { content: ''; position: absolute; top: 20px; left: 50%; right: -50%; height: 2px; background: var(--glass-border); z-index: 0; transition: background var(--t-smooth); }
+.step.done::after { background: var(--success); }
+.step-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.88rem; font-weight: 600; border: 2px solid var(--glass-border); background: var(--choc-dark); color: var(--text-muted); transition: all var(--t-smooth); z-index: 1; }
+.step.active .step-circle { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.1); animation: agentActivate 2s ease-in-out infinite; }
+.step.done   .step-circle { border-color: var(--success); background: var(--success); color: var(--choc-dark); }
+.step-label { font-size: 0.72rem; color: var(--text-muted); text-align: center; transition: color var(--t-fast); letter-spacing: 0.05em; }
+.step.active .step-label { color: var(--gold); }
+.step.done   .step-label { color: var(--success); }
+
+/* ── Form Sections ───────────────────────────────────────── */
+.checkout-section { margin-bottom: var(--space-xl); }
+.checkout-section-title { font-family: var(--font-display); font-size: 1.15rem; color: var(--gold); margin-bottom: var(--space-lg); display: flex; align-items: center; gap: var(--space-sm); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+.form-grid .full-span { grid-column: 1 / -1; }
+
+/* ── Credit Card ─────────────────────────────────────────── */
+.card-container { perspective: 1000px; margin: 0 auto var(--space-xl); width: 100%; max-width: 380px; height: 210px; }
+.credit-card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(0.4,0,0.2,1); cursor: pointer; }
+.credit-card.flipped { transform: rotateY(180deg); }
+.card-face {
+  position: absolute; inset: 0; border-radius: 18px;
+  backface-visibility: hidden;
+  padding: var(--space-lg);
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.card-front {
+  background: linear-gradient(135deg, #1E0E09 0%, #4A2C2A 40%, #6B3A2A 70%, #C9A84C 100%);
+  border: 1px solid rgba(201,168,76,0.3);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.card-back { background: linear-gradient(135deg, #2C1810, #1E0E09); transform: rotateY(180deg); border: 1px solid rgba(201,168,76,0.2); }
+.card-chip { width: 44px; height: 34px; background: linear-gradient(135deg, #E8C870, #C9A84C); border-radius: 6px; border: 1px solid rgba(201,168,76,0.5); }
+.card-brand { font-family: var(--font-elegant); font-style: italic; font-size: 1.1rem; color: var(--gold); letter-spacing: 0.05em; }
+.card-number-display { font-size: 1.3rem; letter-spacing: 0.2em; color: var(--cream); font-family: 'Courier New', monospace; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+.card-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
+.card-holder-label, .card-expiry-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(245,236,215,0.6); }
+.card-holder-value, .card-expiry-value { font-size: 0.9rem; color: var(--cream); font-weight: 500; }
+.card-back-stripe { background: rgba(0,0,0,0.7); height: 44px; margin: 0 -var(--space-lg); margin-bottom: var(--space-md); }
+.card-cvv-band { background: rgba(245,236,215,0.12); border-radius: 6px; padding: 8px 14px; display: flex; justify-content: flex-end; }
+.card-cvv-value { font-family: 'Courier New', monospace; font-size: 1.1rem; color: var(--cream); letter-spacing: 0.15em; }
+.card-back-brand { font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: var(--space-md); }
+
+/* ── Card Fields ─────────────────────────────────────────── */
+.card-input { font-family: 'Courier New', monospace; letter-spacing: 0.1em; }
+
+/* ── Order Summary (sidebar) ─────────────────────────────── */
+.order-summary-panel { position: sticky; top: calc(var(--nav-height) + var(--space-lg)); }
+.summary-items { display: flex; flex-direction: column; gap: var(--space-sm); margin-bottom: var(--space-lg); }
+.summary-item { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm); background: rgba(44,24,16,0.3); border-radius: var(--radius-md); border: 1px solid var(--glass-border); }
+.summary-item-img { width: 50px; height: 50px; object-fit: cover; border-radius: var(--radius-sm); flex-shrink: 0; }
+.summary-item-info { flex: 1; }
+.summary-item-name { font-size: 0.88rem; color: var(--cream); font-weight: 500; }
+.summary-item-qty  { font-size: 0.78rem; color: var(--text-muted); }
+.summary-item-price{ font-size: 0.9rem; color: var(--gold); font-weight: 600; flex-shrink: 0; }
+.summary-divider { height: 1px; background: var(--glass-border); margin: var(--space-md) 0; }
+.summary-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+.summary-label { font-size: 0.88rem; color: var(--text-secondary); }
+.summary-value { font-size: 0.88rem; color: var(--text-primary); }
+.summary-row.total .summary-label { font-size: 1rem; font-weight: 600; color: var(--cream); }
+.summary-row.total .summary-value { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--gold); }
+
+/* ── Payment Security Banner ─────────────────────────────── */
+.security-banner {
+  display: flex; align-items: center; gap: var(--space-sm);
+  padding: var(--space-md); border-radius: var(--radius-md);
+  background: rgba(76,175,124,0.08); border: 1px solid rgba(76,175,124,0.2);
+  font-size: 0.8rem; color: var(--success); margin-top: var(--space-md);
+}
+
+/* ── Flow Overlay ────────────────────────────────────────── */
+.flow-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(10,5,4,0.95); backdrop-filter: blur(12px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--space-xl);
+  opacity: 0; pointer-events: none; transition: opacity var(--t-smooth);
+}
+.flow-overlay.active { opacity: 1; pointer-events: all; }
+.flow-spinner { width: 64px; height: 64px; border: 3px solid var(--glass-border); border-top-color: var(--gold); border-radius: 50%; animation: rotate 0.8s linear infinite; }
+.flow-status-text { font-family: var(--font-display); font-size: 1.2rem; color: var(--gold); text-align: center; }
+.flow-sub-text { color: var(--text-muted); font-size: 0.88rem; text-align: center; }
+
+/* ── Error Message ───────────────────────────────────────── */
+.payment-error-box { background: var(--error-bg); border: 1px solid rgba(224,90,79,0.4); border-radius: var(--radius-lg); padding: var(--space-lg); margin-bottom: var(--space-xl); display: none; }
+.payment-error-box.visible { display: block; }
+.payment-error-title { color: var(--error); font-weight: 600; margin-bottom: var(--space-sm); }
+.payment-error-msg { color: var(--text-secondary); font-size: 0.9rem; }
+
+/* ── Magic Cards Hint ────────────────────────────────────── */
+.magic-cards-hint {
+  font-size: 0.78rem; color: var(--text-muted); margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md); background: rgba(44,24,16,0.4);
+  border-radius: var(--radius-md); border: 1px dashed var(--glass-border); line-height: 1.6;
+}
+.magic-cards-hint strong { color: var(--gold); }
+
+@media (max-width: 900px) {
+  .checkout-grid { grid-template-columns: 1fr; }
+  .order-summary-panel { position: static; }
+}
+@media (max-width: 600px) {
+  .form-grid { grid-template-columns: 1fr; }
+}

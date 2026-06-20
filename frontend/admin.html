@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración — Chocolates Helena</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    /* ── LOGIN OVERLAY ───────────────────────────────────── */
+    #admin-login-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse 80% 70% at 20% 20%, rgba(200,16,46,0.25) 0%, transparent 55%),
+                  radial-gradient(ellipse 60% 60% at 80% 80%, rgba(26,10,13,0.95) 0%, transparent 70%),
+                  rgba(8,3,5,0.97);
+      backdrop-filter: blur(12px);
+    }
+    @keyframes loginFadeOut { to { opacity: 0; pointer-events: none; } }
+    @keyframes loginShake {
+      0%,100%{transform:translateX(0)} 20%{transform:translateX(-10px)}
+      40%{transform:translateX(10px)} 60%{transform:translateX(-8px)} 80%{transform:translateX(8px)}
+    }
+    #login-card {
+      background: rgba(45,18,24,0.85); backdrop-filter: blur(24px) saturate(1.5);
+      border: 1px solid rgba(232,184,75,0.25); border-radius: 24px;
+      padding: 48px 40px; width: 100%; max-width: 440px;
+      box-shadow: 0 0 80px rgba(200,16,46,0.2), 0 24px 64px rgba(0,0,0,0.6),
+                  inset 0 1px 0 rgba(232,184,75,0.15);
+      position: relative; overflow: hidden;
+    }
+    #login-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--peru-red), var(--gold), var(--peru-red));
+    }
+    .login-brand {
+      text-align: center; margin-bottom: 32px;
+    }
+    .login-logo {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--peru-red), var(--gold-deep));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px; margin: 0 auto 16px;
+      box-shadow: 0 0 40px rgba(200,16,46,0.4), 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .login-title { font-family: var(--font-display); font-size: 1.8rem; color: var(--cream); margin-bottom: 4px; }
+    .login-subtitle { font-size: 0.78rem; color: var(--peru-red-light); letter-spacing: 0.18em; text-transform: uppercase; font-family: var(--font-elegant); }
+    .login-form { display: flex; flex-direction: column; gap: 20px; }
+    .login-error {
+      background: rgba(200,16,46,0.12); border: 1px solid rgba(200,16,46,0.4);
+      border-radius: 10px; padding: 10px 14px;
+      color: #ff7070; font-size: 0.85rem; text-align: center;
+      display: none;
+    }
+    .login-error:not(:empty) { display: block; }
+    #login-btn {
+      background: linear-gradient(135deg, var(--peru-red), var(--peru-red-deep) 50%, var(--gold-deep));
+      color: #fff; border: none; border-radius: var(--radius-pill);
+      padding: 15px; font-size: 1rem; font-weight: 600; cursor: pointer;
+      transition: all 0.3s; letter-spacing: 0.05em;
+      box-shadow: 0 4px 20px rgba(200,16,46,0.4);
+    }
+    #login-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(200,16,46,0.6); }
+    #login-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .login-hint {
+      text-align: center; font-size: 0.75rem; color: var(--text-muted);
+      margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(232,184,75,0.1);
+    }
+    /* ── ADMIN PANEL ─────────────────────────────────────── */
+    #admin-main-content { display: none; }
+    .admin-page { min-height: 100vh; padding-top: calc(var(--nav-height) + var(--space-2xl)); padding-bottom: var(--space-3xl); }
+    .admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-lg); margin-bottom: var(--space-2xl); }
+    .stat-card { padding: var(--space-xl); text-align: center; }
+    .stat-number { font-family: var(--font-display); font-size: 2.5rem; font-weight: 700; color: var(--gold); display: block; }
+    .stat-label  { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-top: 4px; }
+    .admin-table-wrap { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--glass-border); margin-bottom: var(--space-2xl); }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .admin-table th { padding: 14px var(--space-lg); text-align: left; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); background: rgba(45,18,24,0.7); border-bottom: 1px solid var(--glass-border); }
+    .admin-table td { padding: 12px var(--space-lg); color: var(--text-secondary); border-bottom: 1px solid rgba(232,184,75,0.08); }
+    .admin-table tr:hover td { background: rgba(232,184,75,0.04); color: var(--text-primary); }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: var(--radius-pill); font-size: 0.72rem; font-weight: 600; }
+    .status-badge.pendiente   { background: rgba(232,168,64,0.15); color: var(--warning); border: 1px solid rgba(232,168,64,0.3); }
+    .status-badge.pagado      { background: rgba(76,175,124,0.15); color: var(--success); border: 1px solid rgba(76,175,124,0.3); }
+    .status-badge.camino      { background: rgba(90,180,224,0.15); color: var(--info);    border: 1px solid rgba(90,180,224,0.3); }
+    .status-badge.cancelado   { background: rgba(224,90,79,0.15);  color: var(--error);   border: 1px solid rgba(224,90,79,0.3); }
+    .stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--space-md); }
+    .stock-card { padding: var(--space-lg); text-align: center; }
+    .stock-bar { height: 6px; border-radius: var(--radius-pill); background: var(--choc-warm); margin: var(--space-sm) 0; overflow: hidden; }
+    .stock-bar-fill { height: 100%; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--gold), var(--gold-light)); transition: width var(--t-smooth); }
+    .stock-name { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 4px; }
+    .stock-qty  { font-family: var(--font-display); font-size: 1.4rem; color: var(--gold); }
+    .email-log { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .email-item { padding: var(--space-md); background: rgba(45,18,24,0.3); border: 1px solid var(--glass-border); border-radius: var(--radius-md); font-size: 0.85rem; }
+    .email-item-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .email-to { color: var(--gold); font-weight: 500; }
+    .email-time { color: var(--text-muted); font-size: 0.78rem; }
+    .empty-state { text-align: center; padding: var(--space-2xl); color: var(--text-muted); }
+    /* Badge peruano en el header */
+    .peru-admin-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(200,16,46,0.12); border: 1px solid rgba(200,16,46,0.3);
+      border-radius: var(--radius-pill); padding: 4px 14px;
+      font-size: 0.72rem; color: var(--peru-red-light); font-weight: 600; letter-spacing: 0.12em;
+      font-family: var(--font-elegant);
+    }
+    .section-h2 { font-family: var(--font-display); color: var(--gold); margin-bottom: var(--space-lg); font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ LOGIN OVERLAY ═══════════════ -->
+<div id="admin-login-overlay">
+  <div id="login-card">
+    <div class="login-brand">
+      <div class="login-logo">🍫</div>
+      <div class="login-title">Panel Administrativo</div>
+      <div class="login-subtitle">Chocolates Helena · Perú</div>
+    </div>
+    <form class="login-form" id="login-form" autocomplete="off">
+      <div class="form-group">
+        <label class="form-label" for="login-username">Usuario</label>
+        <input type="text" id="login-username" class="form-input" placeholder="admin" required autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-password">Contraseña</label>
+        <input type="password" id="login-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <div class="login-error" id="login-error"></div>
+      <button type="submit" class="btn" id="login-btn">🔐 Ingresar al Panel</button>
+    </form>
+    <div class="login-hint">🇵🇪 Acceso restringido solo para administradores de Helena Perú</div>
+  </div>
+</div>
+
+<!-- ═══════════════ ADMIN CONTENT ═══════════════ -->
+<div id="admin-main-content">
+
+<nav class="navbar" id="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">🍫</div>
+    <div>
+      <span class="nav-logo-text">Helena</span>
+      <span class="nav-logo-subtitle">Panel de Administración</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">Catálogo</a></li>
+    <li><a href="checkout.html">Checkout</a></li>
+  </ul>
+  <div class="nav-actions" style="gap:var(--space-sm)">
+    <span class="peru-admin-badge">🇵🇪 <span id="admin-user-badge">👤 admin</span></span>
+    <button class="btn btn-ghost btn-sm" id="refresh-btn" onclick="loadAdminData()">🔄 Actualizar</button>
+    <button class="btn btn-ghost btn-sm" onclick="GeminiConfig.showModal()" title="Configurar Gemini AI">🤖 Gemini AI</button>
+    <button class="btn btn-ghost btn-sm" style="color:var(--error)" onclick="resetAllData()" title="Borrar todos los datos">🗑️ Reset DB</button>
+    <button class="btn btn-ghost btn-sm" style="color:var(--peru-red-light)" id="admin-logout-btn" title="Cerrar sesión">🚪 Salir</button>
+  </div>
+</nav>
+
+<main class="admin-page">
+  <div class="container">
+    <div class="section-header" style="text-align:left;margin-bottom:var(--space-xl)">
+      <span class="section-label">🇵🇪 Panel de Control</span>
+      <h1 style="font-size:clamp(1.6rem,3vw,2.2rem);margin-top:var(--space-sm)">Administración de Pedidos</h1>
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-top:8px">Chocolates Helena — Lima, Perú · Reportes en tiempo real</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="admin-grid" id="admin-stats">
+      <div class="glass-card stat-card">
+        <span class="stat-number" id="stat-total-pedidos">0</span>
+        <span class="stat-label">Total Pedidos</span>
+      </div>
+      <div class="glass-card stat-card">
+        <span class="stat-number" id="stat-pagados" style="color:var(--success)">0</span>
+        <span class="stat-label">Pagados</span>
+      </div>
+      <div class="glass-card stat-card">
+        <span class="stat-number" id="stat-en-camino" style="color:var(--info)">0</span>
+        <span class="stat-label">En Camino</span>
+      </div>
+      <div class="glass-card stat-card">
+        <span class="stat-number" id="stat-cancelados" style="color:var(--error)">0</span>
+        <span class="stat-label">Cancelados</span>
+      </div>
+      <div class="glass-card stat-card">
+        <span class="stat-number" id="stat-revenue">S/0</span>
+        <span class="stat-label">Revenue Total (PEN)</span>
+      </div>
+    </div>
+
+    <!-- Pedidos -->
+    <h2 class="section-h2">📋 Pedidos Registrados</h2>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID Pedido</th><th>Cliente</th><th>Email</th>
+            <th>Items</th><th>Total</th><th>Estado</th><th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="pedidos-table-body">
+          <tr><td colspan="7" class="empty-state">No hay pedidos registrados aún.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Stock -->
+    <h2 class="section-h2">📦 Inventario en Tiempo Real</h2>
+    <div class="stock-grid" id="stock-grid">
+      <div class="empty-state">Cargando inventario...</div>
+    </div>
+
+    <!-- Email Log -->
+    <h2 class="section-h2" style="margin-top:var(--space-2xl)">📧 Log de Emails Enviados</h2>
+    <div class="glass-panel" style="padding:var(--space-lg)">
+      <div class="email-log" id="email-log">
+        <div class="empty-state">No se han enviado emails aún.</div>
+      </div>
+    </div>
+
+    <!-- MCP Calls Log -->
+    <h2 class="section-h2" style="margin-top:var(--space-2xl)">🔌 Log de Llamadas MCP</h2>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr><th>Timestamp</th><th>Servidor</th><th>Herramienta</th><th>Estado</th><th>Resultado (resumen)</th></tr>
+        </thead>
+        <tbody id="mcp-log-body">
+          <tr><td colspan="5" class="empty-state">No hay llamadas MCP registradas.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+</div><!-- /#admin-main-content -->
+
+<script src="js/config.js"></script>
+<script src="js/state.js"></script>
+<script src="js/geminiAPI.js"></script>
+<script src="js/mcp/postgresMCP.js"></script>
+<script src="js/mcp/paymentMCP.js"></script>
+<script src="js/mcp/mapsMCP.js"></script>
+<script src="js/mcp/emailMCP.js"></script>
+<script src="js/agents/frontAgent.js"></script>
+<script src="js/agents/orderAgent.js"></script>
+<script src="js/agents/paymentAgent.js"></script>
+<script src="js/agents/logisticsAgent.js"></script>
+<script src="js/orchestrator.js"></script>
+<script src="js/catalog.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/geminiConfig.js"></script>
+<script src="js/adminAuth.js"></script>
+<script>
+function loadAdminData() {
+  const pedidos  = PostgresMCP.getAllPedidos();
+  const stock    = PostgresMCP.getStock();
+  const emails   = EmailMCP.getSentEmails();
+  const mcpCalls = SessionState.mcpCalls;
+
+  // Stats
+  const pagados    = pedidos.filter(p => p.status.includes('Pagado') || p.status === 'En Camino').length;
+  const enCamino   = pedidos.filter(p => p.status === 'En Camino').length;
+  const cancelados = pedidos.filter(p => p.status.includes('Cancelado')).length;
+  const revenue    = pedidos.filter(p => !p.status.includes('Cancelado')).reduce((s,p) => s + (p.total||0), 0);
+
+  document.getElementById('stat-total-pedidos').textContent = pedidos.length;
+  document.getElementById('stat-pagados').textContent       = pagados;
+  document.getElementById('stat-en-camino').textContent     = enCamino;
+  document.getElementById('stat-cancelados').textContent    = cancelados;
+  document.getElementById('stat-revenue').textContent       = `S/${(revenue/1000).toFixed(1)}K`;
+
+  // Pedidos table
+  const tbody = document.getElementById('pedidos-table-body');
+  if (pedidos.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No hay pedidos aún. <a href="checkout.html" style="color:var(--gold)">Realizar una compra →</a></td></tr>`;
+  } else {
+    tbody.innerHTML = pedidos.map(p => {
+      const sc = p.status.includes('Cancelado') ? 'cancelado' : p.status === 'En Camino' ? 'camino' : p.status.includes('Pagado') ? 'pagado' : 'pendiente';
+      const fecha = new Date(p.fecha_creacion).toLocaleString('es-PE', { dateStyle:'short', timeStyle:'short' });
+      return `<tr>
+        <td style="color:var(--gold);font-weight:600;font-size:0.8rem">${p.pedido_id}</td>
+        <td>${p.cliente_nombre||'—'}</td>
+        <td style="font-size:0.82rem">${p.cliente_email||'—'}</td>
+        <td>${(p.items||[]).length} item(s)</td>
+        <td style="color:var(--gold);font-weight:600">S/${(p.total||0).toLocaleString('es-PE')}</td>
+        <td><span class="status-badge ${sc}">${p.status}</span></td>
+        <td style="font-size:0.8rem;color:var(--text-muted)">${fecha}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Stock
+  const MAX_STOCK = 60;
+  const stockGrid = document.getElementById('stock-grid');
+  const stockNames = { trufa_negra:'Trufa Negra Intenso', bombon_maracuya:'Bombón Maracuyá', tableta_leche:'Tableta de Leche', chocolate_blanco:'Choc. Blanco Rosa', caja_regalo:'Caja de Regalo', chocolate_picante:'Choc. Picante' };
+  stockGrid.innerHTML = Object.entries(stock).map(([key, val]) => `
+    <div class="glass-card stock-card">
+      <div class="stock-qty">${val.cantidad}</div>
+      <div class="stock-name">${stockNames[key]||key}</div>
+      <div class="stock-bar"><div class="stock-bar-fill" style="width:${Math.min((val.cantidad/MAX_STOCK)*100,100)}%;background:${val.cantidad<5?'var(--error)':val.cantidad<15?'var(--warning)':'linear-gradient(90deg,var(--gold),var(--gold-light))'}"></div></div>
+      <div style="font-size:0.72rem;color:${val.disponible?'var(--success)':'var(--error)'}">${val.disponible?'✅ Disponible':'❌ Agotado'}</div>
+    </div>
+  `).join('');
+
+  // Emails
+  const emailLog = document.getElementById('email-log');
+  emailLog.innerHTML = emails.length === 0
+    ? '<div class="empty-state">No se han enviado emails aún.</div>'
+    : emails.map(e => `
+      <div class="email-item">
+        <div class="email-item-header">
+          <span class="email-to">📧 ${e.destinatario}</span>
+          <span class="email-time">${new Date(e.timestamp).toLocaleTimeString('es-PE')}</span>
+        </div>
+        <div style="color:var(--text-secondary);font-size:0.82rem">${e.asunto}</div>
+        <div style="color:var(--text-muted);font-size:0.78rem;margin-top:4px">ID: ${e.message_id}</div>
+      </div>
+    `).join('');
+
+  // MCP Calls
+  const mcpTbody = document.getElementById('mcp-log-body');
+  mcpTbody.innerHTML = mcpCalls.length === 0
+    ? '<tr><td colspan="5" class="empty-state">No hay llamadas MCP aún.</td></tr>'
+    : [...mcpCalls].reverse().map(c => `
+      <tr>
+        <td style="font-size:0.78rem;color:var(--text-muted)">${c.timestamp}</td>
+        <td style="color:var(--info);font-size:0.82rem">${c.server}</td>
+        <td style="color:var(--gold);font-weight:600;font-size:0.82rem">${c.tool}</td>
+        <td><span class="status-badge ${c.status==='success'?'pagado':'cancelado'}">${c.status}</span></td>
+        <td style="font-size:0.78rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.result}">${(c.result||'').substring(0,80)}...</td>
+      </tr>
+    `).join('');
+}
+
+function resetAllData() {
+  if (!confirm('¿Seguro que quieres borrar TODOS los pedidos, emails y logs? Esta acción no se puede deshacer.')) return;
+  SessionState.clearStorage();
+  loadAdminData();
+  if (typeof UI !== 'undefined') UI.showToast('Base de datos reseteada', 'info');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  GeminiConfig.init();
+  AdminAuth.init();
+  const navbar = document.querySelector('.navbar');
+  if (navbar) window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
+  if (AdminAuth.isAuthenticated()) {
+    loadAdminData();
+    setInterval(loadAdminData, 5000);
+  }
+});
+</script>
+</body>
+</html>

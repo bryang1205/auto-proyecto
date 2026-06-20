@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="¡Pedido confirmado! — Chocolates Helena Perú. Tu pedido está en camino en Lima.">
+  <title>¡Éxito! Tu pedido está en camino — Chocolates Helena Perú</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <style>
+    .success-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: calc(var(--nav-height) + var(--space-2xl)) var(--space-xl) var(--space-3xl); }
+    .success-container { max-width: 900px; width: 100%; }
+    .success-hero { text-align: center; margin-bottom: var(--space-2xl); }
+    .success-icon { font-size: 5rem; display: block; margin-bottom: var(--space-lg); animation: successBounce 0.6s ease forwards, float 3s ease-in-out 0.6s infinite; }
+    .success-title { font-size: clamp(2rem,4vw,3.2rem); margin-bottom: var(--space-md); color: var(--cream); }
+    .success-subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: var(--space-xl); }
+    .success-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-xl); }
+    .info-block { padding: var(--space-xl); }
+    .info-block-title { font-family: var(--font-display); color: var(--gold); font-size: 1rem; margin-bottom: var(--space-md); display: flex; align-items: center; gap: var(--space-sm); }
+    .info-row { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--space-md); }
+    .info-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+    .info-value { font-size: 0.95rem; color: var(--text-primary); font-weight: 500; }
+    .info-value.gold { color: var(--gold); font-family: var(--font-display); font-size: 1.1rem; }
+    .order-items { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-sm); }
+    .order-item { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm); background: rgba(44,24,16,0.3); border-radius: var(--radius-md); font-size: 0.88rem; }
+    .order-item-qty { background: rgba(201,168,76,0.15); color: var(--gold); border-radius: var(--radius-pill); padding: 2px 8px; font-size: 0.78rem; font-weight: 600; }
+    /* Map placeholder */
+    .map-container { background: linear-gradient(135deg, rgba(44,24,16,0.6), rgba(10,5,4,0.8)); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); height: 200px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; margin-top: var(--space-md); }
+    .map-dot-origin { position: absolute; width: 14px; height: 14px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 0 4px rgba(201,168,76,0.3); animation: pulseGlow 2s infinite; left: 25%; top: 45%; }
+    .map-dot-dest { position: absolute; width: 14px; height: 14px; background: var(--success); border-radius: 50%; box-shadow: 0 0 0 4px rgba(76,175,124,0.3); animation: pulseGlow 2s infinite 0.5s; right: 20%; top: 55%; }
+    .map-line { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+    .map-vehicle { position: absolute; font-size: 1.4rem; left: 25%; top: 40%; animation: mapVehicle 4s ease-in-out infinite alternate; }
+    @keyframes mapVehicle { from { left: 27%; } to { left: 65%; top: 50%; } }
+    .map-info { text-align: center; z-index: 1; display: flex; flex-direction: column; gap: var(--space-sm); }
+    /* Confetti */
+    .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+    .confetti-piece { position: absolute; width: 10px; height: 10px; opacity: 0; border-radius: 2px; animation: confetti-fall linear forwards; }
+    /* JSON block */
+    .json-block { background: rgba(10,5,4,0.9); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--space-lg); font-family: 'Courier New', monospace; font-size: 0.75rem; color: var(--gold-pale); overflow-x: auto; max-height: 300px; overflow-y: auto; }
+    .json-key { color: var(--gold-light); }
+    .json-str { color: var(--success); }
+    .json-num { color: var(--info); }
+    .json-bool{ color: var(--warning); }
+    @media (max-width: 700px) { .success-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">🍫</div>
+    <div>
+      <span class="nav-logo-text">Helena</span>
+      <span class="nav-logo-subtitle">Pedido Confirmado</span>
+    </div>
+  </a>
+  <div class="nav-actions">
+    <a href="index.html" class="btn btn-secondary btn-sm">← Volver al Catálogo</a>
+  </div>
+</nav>
+
+<!-- Confetti -->
+<div class="confetti-container" id="confetti"></div>
+
+<!-- MAIN -->
+<main class="success-page">
+  <div class="success-container">
+
+    <!-- Hero -->
+    <div class="success-hero animate-fadeInUp">
+      <span class="success-icon">🎉</span>
+      <h1 class="success-title">¡Tu pedido está en camino!</h1>
+      <p class="success-subtitle" id="success-subtitle">
+        El enjambre de agentes procesó tu pedido exitosamente. Pronto recibirás tu chocolate.
+      </p>
+
+      <!-- Tracking Banner -->
+      <div class="glass-panel" style="display:inline-flex;align-items:center;gap:var(--space-lg);padding:var(--space-lg) var(--space-2xl);margin-top:var(--space-md)">
+        <div>
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted)">Tracking ID</div>
+          <div style="font-family:var(--font-display);font-size:1.2rem;color:var(--gold)" id="tracking-id">—</div>
+        </div>
+        <div style="width:1px;height:40px;background:var(--glass-border)"></div>
+        <div>
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted)">Tiempo Estimado</div>
+          <div style="font-family:var(--font-display);font-size:1.2rem;color:var(--success)" id="eta-display">Calculando...</div>
+        </div>
+        <div style="width:1px;height:40px;background:var(--glass-border)"></div>
+        <div>
+          <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-muted)">Estado</div>
+          <div style="font-size:1rem;color:var(--success);font-weight:600">🚚 En Camino</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Grid -->
+    <div class="success-grid">
+      <!-- Pedido -->
+      <div class="glass-card info-block animate-slideLeft">
+        <div class="info-block-title">📦 Detalles del Pedido</div>
+        <div class="info-row">
+          <span class="info-label">ID del Pedido</span>
+          <span class="info-value gold" id="pedido-id">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Total Pagado</span>
+          <span class="info-value gold" id="pedido-total">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Estado</span>
+          <span class="info-value" style="color:var(--success)">✅ En Camino</span>
+        </div>
+        <div class="info-label" style="margin-bottom:var(--space-xs)">Productos</div>
+        <div class="order-items" id="order-items-list">—</div>
+      </div>
+
+      <!-- Entrega -->
+      <div class="glass-card info-block animate-slideRight">
+        <div class="info-block-title">🚚 Información de Entrega</div>
+        <div class="info-row">
+          <span class="info-label">Destinatario</span>
+          <span class="info-value" id="cliente-nombre">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Dirección</span>
+          <span class="info-value" id="cliente-direccion">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Distancia</span>
+          <span class="info-value" id="distancia">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Vehículo</span>
+          <span class="info-value" id="vehiculo">Moto de Delivery Helena</span>
+        </div>
+
+        <!-- Map Visual -->
+        <div class="map-container">
+          <div class="map-dot-origin" title="Bodega Helena"></div>
+          <div class="map-dot-dest" title="Tu dirección"></div>
+          <div class="map-vehicle">🏍️</div>
+          <svg class="map-line" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+            <path id="route-path" d="M 80 90 Q 150 60 240 110" stroke="rgba(201,168,76,0.4)" stroke-width="2" fill="none" stroke-dasharray="6,4"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Respuesta JSON del Agente 4 -->
+    <div class="glass-panel" style="padding:var(--space-xl);margin-bottom:var(--space-xl)" id="json-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-md)">
+        <h3 style="font-family:var(--font-display);color:var(--gold);font-size:1rem">
+          🤖 Respuesta JSON del Agente 4 — Operaciones & Logística
+        </h3>
+        <button class="btn btn-ghost btn-sm" id="copy-json-btn" onclick="copyJSON()">📋 Copiar</button>
+      </div>
+      <pre class="json-block" id="json-output">Cargando datos del agente...</pre>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:var(--space-md);justify-content:center;flex-wrap:wrap">
+      <a href="index.html" class="btn btn-primary btn-lg">🍫 Seguir Comprando</a>
+      <a href="admin.html" class="btn btn-secondary btn-lg">📊 Ver Panel Admin</a>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ── Confetti ──────────────────────────────────────────────────
+function launchConfetti() {
+  const colors = ['#C9A84C','#E8C870','#F5ECD7','#4CAF7C','#6B3A2A','#fff'];
+  const container = document.getElementById('confetti');
+  for (let i = 0; i < 80; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.cssText = `
+      left: ${Math.random()*100}%;
+      top: -20px;
+      background: ${colors[Math.floor(Math.random()*colors.length)]};
+      width: ${6+Math.random()*8}px;
+      height: ${6+Math.random()*8}px;
+      border-radius: ${Math.random()>0.5?'50%':'2px'};
+      animation-duration: ${2+Math.random()*3}s;
+      animation-delay: ${Math.random()*1.5}s;
+      opacity: 1;
+      transform: rotate(${Math.random()*360}deg);
+    `;
+    container.appendChild(piece);
+    setTimeout(() => piece.remove(), 6000);
+  }
+}
+
+// ── JSON Syntax Highlighter ───────────────────────────────────
+function syntaxHighlight(json) {
+  if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
+  return json
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+      let cls = 'json-num';
+      if (/^"/.test(match)) { cls = /:$/.test(match) ? 'json-key' : 'json-str'; }
+      else if (/true|false/.test(match)) { cls = 'json-bool'; }
+      return `<span class="${cls}">${match}</span>`;
+    });
+}
+
+function copyJSON() {
+  const raw = document.getElementById('json-output').dataset.raw || '';
+  navigator.clipboard.writeText(raw).then(() => {
+    const btn = document.getElementById('copy-json-btn');
+    btn.textContent = '✅ Copiado';
+    setTimeout(() => btn.textContent = '📋 Copiar', 2000);
+  });
+}
+
+// ── Load Order Result ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  launchConfetti();
+
+  const raw = sessionStorage.getItem('helena_order_result');
+
+  if (!raw) {
+    // Mostrar datos demo si no hay resultado real
+    const demo = {
+      status: 'SUCCESS',
+      pedido: { id: 'PED-DEMO1234', status: 'En Camino', items: [{ name: 'Trufa Negra Intenso', quantity: 2, subtotal: 90000 }], total: 90000, totalFormateado: 'S/90.00' },
+      cliente: { nombre: 'Cliente Demo', email: 'demo@helena.pe', direccion: 'Av. Larco 1234, Miraflores, Lima' },
+      pago: { aprobado: true, token: 'tok_DEMO123456789' },
+      entrega: { trackingId: 'TRK-DEMO1A2B3', origen: 'Bodega Helena — Miraflores, Lima', destino: { direccion: 'Av. Larco 1234, Miraflores, Lima', ciudad: 'Lima', lat: -12.1191, lng: -77.0299 }, distanciaKm: 3.8, tiempoEstimadoMin: 25, tiempoEstimadoTexto: '25 minutos', vehiculo: 'Moto de Delivery Helena — Lima', rutaPuntos: [] },
+      mensajeFrontend: '🍫 ¡Tu pedido PED-DEMO1234 está en camino! Tiempo estimado: 25 minutos. Tracking: TRK-DEMO1A2B3',
+      generadoEn: new Date().toISOString()
+    };
+    loadResult(demo);
+    return;
+  }
+
+  try {
+    const result = JSON.parse(raw);
+    loadResult(result);
+    sessionStorage.removeItem('helena_order_result');
+  } catch (e) {
+    document.getElementById('json-output').textContent = 'Error al parsear los datos del pedido.';
+  }
+});
+
+function loadResult(result) {
+  const p = result.pedido || {};
+  const c = result.cliente || {};
+  const e = result.entrega || {};
+
+  document.getElementById('tracking-id').textContent = e.trackingId || '—';
+  document.getElementById('eta-display').textContent = e.tiempoEstimadoTexto || '—';
+  document.getElementById('success-subtitle').textContent =
+    `¡${c.nombre || 'Estimado cliente'}, tu pedido ${p.id || ''} ha sido procesado por nuestro enjambre de agentes! 🤖🍫`;
+
+  document.getElementById('pedido-id').textContent = p.id || '—';
+  document.getElementById('pedido-total').textContent = p.totalFormateado || `S/ ${(p.total||0).toLocaleString('es-PE')}`;
+
+  const items = p.items || [];
+  document.getElementById('order-items-list').innerHTML = items.map(i =>
+    `<div class="order-item"><span class="order-item-qty">x${i.quantity}</span> ${i.name} <span style="margin-left:auto;color:var(--gold)">S/ ${(i.subtotal||0).toLocaleString('es-PE')}</span></div>`
+  ).join('') || '<div style="color:var(--text-muted)">—</div>';
+
+  document.getElementById('cliente-nombre').textContent = c.nombre || '—';
+  document.getElementById('cliente-direccion').textContent = c.direccion || '—';
+  document.getElementById('distancia').textContent = e.distanciaKm ? `${e.distanciaKm} km` : '—';
+  document.getElementById('vehiculo').textContent = e.vehiculo || 'Moto de Delivery Helena';
+
+  const jsonEl = document.getElementById('json-output');
+  const jsonStr = JSON.stringify(result, null, 2);
+  jsonEl.innerHTML = syntaxHighlight(jsonStr);
+  jsonEl.dataset.raw = jsonStr;
+}
+</script>
+</body>
+</html>

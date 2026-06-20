@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Chocolates Helena — Chocolates artesanales premium del Perú. Cacao amazónico de San Martín y Amazonas. Trufas, bombones y tabletas con entrega a domicilio en Lima.">
+  <title>Chocolates Helena — Artesanía en Cacao Peruano Premium</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/catalog.css">
+  <link rel="stylesheet" href="css/chat.css">
+</head>
+
+<body>
+
+  <!-- ═══════════════════ NAVBAR ═══════════════════ -->
+  <nav class="navbar" id="navbar">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">🍫</div>
+      <div>
+        <span class="nav-logo-text">Helena</span>
+        <span class="nav-logo-subtitle">Chocolates Artesanales</span>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#catalogo">Catálogo</a></li>
+      <li><a href="#nosotros">Nosotros</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="cart-btn" onclick="UI.toggleCart()" id="cart-nav-btn">
+        🛒 Carrito
+        <span class="cart-count" id="cart-count-nav" style="display:none">0</span>
+      </button>
+      <a href="checkout.html" class="btn btn-primary btn-sm">Comprar Ahora</a>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════ HERO ═══════════════════ -->
+  <section class="hero" id="inicio">
+    <div class="hero-bg"></div>
+    <div class="hero-particles" id="particles"></div>
+    <div class="hero-content">
+      <div class="hero-label">
+        <span>✦</span>
+        <span class="peru-flag-badge">🇵🇪 Orgullo Peruano</span>
+        <span>✦</span>
+      </div>
+      <h1 class="hero-title">
+        El Cacao<br>
+        <span class="line-2">más puro del Perú</span>
+      </h1>
+      <p class="hero-subtitle">
+        Cada pieza es una obra de arte. Cacao amazónico de San Martín y Amazonas,
+        técnicas artesanales y entrega a domicilio en todo el Perú.
+      </p>
+      <div class="hero-actions">
+        <a href="#catalogo" class="btn btn-primary btn-lg">
+          🍫 Explorar Catálogo
+        </a>
+        <button class="btn btn-secondary btn-lg" onclick="UI.toggleChat()">
+          💬 Hablar con Asistente
+        </button>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-number gold-shimmer">6+</span>
+          <span class="hero-stat-label">Variedades</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-number gold-shimmer">100%</span>
+          <span class="hero-stat-label">Artesanal</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-number gold-shimmer">24h</span>
+          <span class="hero-stat-label">Entrega en todo el Perú</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll">
+      <span>Descubrir</span>
+      <span>↓</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ CATÁLOGO ═══════════════════ -->
+  <section class="catalog-section" id="catalogo">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">✦ Colección Exclusiva ✦</span>
+        <h2 class="section-title">Nuestros Chocolates Premium</h2>
+        <p class="section-subtitle">Cada variedad es elaborada a mano con cacao de origen Peruano. Piezas únicas para
+          paladares exigentes.</p>
+      </div>
+      <div class="catalog-grid" id="catalog-grid">
+        <!-- Renderizado por catalog.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ FEATURES ═══════════════════ -->
+  <section class="features-section" id="nosotros">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">✦ La Experiencia Helena ✦</span>
+        <h2 class="section-title">Por qué elegir Helena</h2>
+      </div>
+      <div class="features-grid">
+        <div class="glass-card feature-card reveal">
+          <span class="feature-icon">🌿</span>
+          <div class="feature-title">Cacao Amazónico</div>
+          <p class="feature-desc">Cacao cultivado en San Martín y Amazonas, Perú. Del árbol a tu mesa, trazabilidad
+            garantizada.</p>
+        </div>
+        <div class="glass-card feature-card reveal delay-100">
+          <span class="feature-icon">👨‍🍳</span>
+          <div class="feature-title">Maestros Chocolateros</div>
+          <p class="feature-desc">Cada pieza elaborada por artesanos peruanos con décadas de experiencia en chocolatería
+            fina.</p>
+        </div>
+        <div class="glass-card feature-card reveal delay-200">
+          <span class="feature-icon">🚚</span>
+          <div class="feature-title">Entrega en Lima</div>
+          <p class="feature-desc">Delivery inteligente con cálculo de ruta en tiempo real. Tu pedido fresco en
+            Miraflores, Surco, San Isidro y más.</p>
+        </div>
+        <div class="glass-card feature-card reveal delay-300">
+          <span class="feature-icon">🔒</span>
+          <div class="feature-title">Pago Seguro</div>
+          <p class="feature-desc">Pasarela de pagos encriptada. Tus datos siempre protegidos con tecnología premium.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ CTA ═══════════════════ -->
+  <section style="padding: var(--space-3xl) 0">
+    <div class="container text-center">
+      <div class="glass-panel" style="padding: var(--space-2xl); max-width: 700px; margin: 0 auto;">
+        <div class="ornament-divider" style="margin-bottom: var(--space-xl)">✦</div>
+        <h2 style="margin-bottom: var(--space-md)">¿Listo para el placer?</h2>
+        <p style="color: var(--text-secondary); margin-bottom: var(--space-xl); font-size: 1.05rem">
+          Agrega tus chocolates al carrito y deja que nuestro enjambre de agentes inteligentes gestione tu pedido en
+          segundos.
+        </p>
+        <a href="#catalogo" class="btn btn-primary btn-lg">🍫 Comenzar mi Pedido</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ FOOTER ═══════════════════ -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">🍫 Chocolates Helena · Lima, Perú</div>
+      <div class="footer-copy">© 2026 Chocolates Helena. Cacao artesanal peruano premium.</div>
+      <div style="display:flex;gap:var(--space-md);font-size:0.82rem;color:var(--text-muted)">
+        <a href="checkout.html" style="color:var(--gold);text-decoration:none">Checkout</a>
+        <a href="admin.html" style="color:var(--text-muted);text-decoration:none;font-size:0.75rem">Admin ↗</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════ CART PANEL ═══════════════════ -->
+  <div class="cart-overlay" id="cart-overlay" onclick="UI.toggleCart()"></div>
+  <div class="cart-panel" id="cart-panel">
+    <div class="cart-header">
+      <span class="cart-title">🛒 Mi Carrito</span>
+      <button class="btn btn-ghost btn-sm" onclick="UI.toggleCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cart-items">
+      <div class="cart-empty" id="cart-empty">
+        <span class="cart-empty-icon">🛒</span>
+        <span style="color:var(--text-muted);font-size:0.9rem">Tu carrito está vacío</span>
+        <p style="color:var(--text-muted);font-size:0.82rem">Explora nuestro catálogo y agrega tus chocolates favoritos.
+        </p>
+      </div>
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total-row">
+        <span class="cart-total-label">Total</span>
+        <span class="cart-total-amount" id="cart-total">$0 COP</span>
+      </div>
+      <a href="checkout.html" class="btn btn-primary w-full" onclick="UI.toggleCart()">
+        💳 Proceder al Checkout
+      </a>
+      <button class="btn btn-ghost w-full btn-sm" onclick="Cart.clear(); UI.showToast('Carrito vaciado','info')">
+        🗑️ Vaciar Carrito
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ CHAT WIDGET ═══════════════════ -->
+  <button class="chat-toggle" id="chat-toggle-btn" onclick="UI.toggleChat()">💬</button>
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-header">
+      <div class="chat-avatar-header">🍫</div>
+      <div class="chat-agent-info">
+        <span class="chat-agent-name">Asistente Helena</span>
+        <span class="chat-agent-status">En línea • Agente de Atención</span>
+      </div>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-area">
+      <input type="text" class="chat-input" id="chat-input" placeholder="Escribe tu mensaje..." autocomplete="off">
+      <button class="chat-send-btn" id="chat-send-btn">➤</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ TOAST ═══════════════════ -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+  <script src="js/config.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/geminiAPI.js"></script>
+  <script src="js/mcp/postgresMCP.js"></script>
+  <script src="js/mcp/paymentMCP.js"></script>
+  <script src="js/mcp/mapsMCP.js"></script>
+  <script src="js/mcp/emailMCP.js"></script>
+  <script src="js/agents/frontAgent.js"></script>
+  <script src="js/agents/orderAgent.js"></script>
+  <script src="js/agents/paymentAgent.js"></script>
+  <script src="js/agents/logisticsAgent.js"></script>
+  <script src="js/orchestrator.js"></script>
+  <script src="js/catalog.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/geminiConfig.js"></script>
+  <script>
+    // ── Inicialización ──────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+      GeminiConfig.init();
+      GeminiConfig.promptIfNeeded();
+      UI.initNavbar();
+      UI.renderCatalog();
+      UI.renderCart();
+
+      // Partículas flotantes en el hero
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 18; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.cssText = `
+      left:${Math.random() * 100}%;
+      top:${Math.random() * 100}%;
+      opacity:${0.1 + Math.random() * 0.4};
+      animation-delay:${Math.random() * 4}s;
+      animation-duration:${3 + Math.random() * 4}s;
+      width:${2 + Math.random() * 5}px;
+      height:${2 + Math.random() * 5}px;
+    `;
+        container.appendChild(p);
+      }
+
+      // Sincronizar carrito entre páginas
+      SessionState.on('cart:update', () => UI.renderCart());
+
+      // Saludo inicial del agente
+      const greet = await Orchestrator.greetUser();
+      UI.appendChatMessage('agent', greet);
+
+      // Chat input
+      const input = document.getElementById('chat-input');
+      const sendBtn = document.getElementById('chat-send-btn');
+
+      async function sendMessage() {
+        const msg = input.value.trim();
+        if (!msg) return;
+        input.value = '';
+        UI.appendChatMessage('user', msg);
+        const typingEl = UI.appendChatMessage('agent', '', true);
+        // No delay artificial — Gemini ya tiene su latencia real
+        const response = await Orchestrator.chat(msg);
+        typingEl?.remove();
+        UI.appendChatMessage('agent', response);
+      }
+
+      sendBtn.addEventListener('click', sendMessage);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+    });
+  </script>
+</body>
+
+</html>

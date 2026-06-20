@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Checkout seguro — Chocolates Helena Perú. Completa tu pedido con pago encriptado y entrega en Lima.">
+  <title>Checkout — Chocolates Helena Perú</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/checkout.css">
+  <link rel="stylesheet" href="css/chat.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">🍫</div>
+    <div>
+      <span class="nav-logo-text">Helena</span>
+      <span class="nav-logo-subtitle">Checkout Seguro</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html">← Volver al Catálogo</a></li>
+  </ul>
+  <div class="nav-actions">
+    <span style="color:var(--success);font-size:0.85rem;display:flex;align-items:center;gap:6px">
+      🔒 Pago encriptado
+    </span>
+  </div>
+</nav>
+
+<!-- FLOW OVERLAY (procesando) -->
+<div class="flow-overlay" id="flow-overlay">
+  <div class="flow-spinner"></div>
+  <div class="flow-status-text" id="flow-status-text">Procesando tu pedido...</div>
+  <div class="flow-sub-text" id="flow-sub-text">El enjambre de agentes está trabajando</div>
+</div>
+
+<!-- MAIN -->
+<main class="checkout-page">
+  <div class="container">
+    <h1 style="margin-bottom:var(--space-xl);font-size:clamp(1.6rem,3vw,2.2rem)">
+      <span class="text-gold">✦</span> Finaliza tu Pedido
+    </h1>
+
+    <!-- Step Indicator -->
+    <div class="step-indicator" id="step-indicator">
+      <div class="step active" id="step-1">
+        <div class="step-circle">1</div>
+        <div class="step-label">Tus Datos</div>
+      </div>
+      <div class="step" id="step-2">
+        <div class="step-circle">2</div>
+        <div class="step-label">Validación</div>
+      </div>
+      <div class="step" id="step-3">
+        <div class="step-circle">3</div>
+        <div class="step-label">Pago</div>
+      </div>
+      <div class="step" id="step-4">
+        <div class="step-circle">🚚</div>
+        <div class="step-label">Logística</div>
+      </div>
+    </div>
+
+    <div class="checkout-grid">
+      <!-- LEFT: Forms -->
+      <div>
+        <!-- Payment Error Box -->
+        <div class="payment-error-box" id="payment-error-box">
+          <div class="payment-error-title">❌ Pago Rechazado</div>
+          <div class="payment-error-msg" id="payment-error-msg">El banco no autorizó la transacción.</div>
+        </div>
+
+        <!-- Datos del Cliente -->
+        <div class="glass-panel" style="padding:var(--space-xl);margin-bottom:var(--space-xl)">
+          <div class="checkout-section">
+            <div class="checkout-section-title">👤 Datos del Cliente</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="field-name">Nombre Completo *</label>
+                <input type="text" id="field-name" class="form-input" placeholder="Ana María Gómez" required autocomplete="name">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="field-email">Correo Electrónico *</label>
+                <input type="email" id="field-email" class="form-input" placeholder="ana@ejemplo.co" required autocomplete="email">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="field-phone">Teléfono *</label>
+                <input type="tel" id="field-phone" class="form-input" placeholder="+51 999 000 000" required autocomplete="tel">
+              </div>
+              <div class="form-group full-span">
+                <label class="form-label" for="field-address">Dirección de Entrega *</label>
+                <div style="display:flex;gap:10px;align-items:stretch">
+                  <input type="text" id="field-address" class="form-input"
+                    placeholder="Av. Larco 123, Miraflores, Lima"
+                    required autocomplete="street-address" style="flex:1">
+                  <button type="button" id="open-map-btn"
+                    style="flex-shrink:0;padding:0 18px;border-radius:12px;
+                           background:linear-gradient(135deg,#C8102E,#8B0A1E 60%,#C49A35);
+                           color:#fff;border:none;cursor:pointer;font-size:0.82rem;
+                           font-weight:600;white-space:nowrap;letter-spacing:0.04em;
+                           transition:all 0.25s;box-shadow:0 4px 16px rgba(200,16,46,0.35);
+                           display:flex;align-items:center;gap:6px"
+                    onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(200,16,46,0.5)'"
+                    onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(200,16,46,0.35)'">
+                    📍 Elegir en Mapa
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pago -->
+        <div class="glass-panel" style="padding:var(--space-xl);margin-bottom:var(--space-xl)">
+          <div class="checkout-section">
+            <div class="checkout-section-title">💳 Información de Pago</div>
+
+            <!-- Tarjeta 3D -->
+            <div class="card-container">
+              <div class="credit-card" id="credit-card">
+                <div class="card-face card-front">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                    <div class="card-chip"></div>
+                    <div class="card-brand">Helena Pay</div>
+                  </div>
+                  <div class="card-number-display" id="card-number-display">•••• •••• •••• ••••</div>
+                  <div class="card-bottom">
+                    <div>
+                      <div class="card-holder-label">Titular</div>
+                      <div class="card-holder-value" id="card-holder-display">NOMBRE APELLIDO</div>
+                    </div>
+                    <div>
+                      <div class="card-expiry-label">Vence</div>
+                      <div class="card-expiry-value" id="card-expiry-display">MM/AA</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-face card-back">
+                  <div class="card-back-stripe"></div>
+                  <div class="card-cvv-band">
+                    <div class="card-cvv-value" id="card-cvv-display">•••</div>
+                  </div>
+                  <div class="card-back-brand">Helena Pay — Pago Seguro</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group full-span">
+                <label class="form-label" for="field-card-number">Número de Tarjeta *</label>
+                <input type="text" id="field-card-number" class="form-input card-input" placeholder="1234 5678 9012 3456" maxlength="19" required autocomplete="cc-number">
+              </div>
+              <div class="form-group full-span">
+                <label class="form-label" for="field-card-holder">Titular de la Tarjeta *</label>
+                <input type="text" id="field-card-holder" class="form-input" placeholder="ANA MARIA GOMEZ" required autocomplete="cc-name">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="field-expiry">Fecha de Vencimiento *</label>
+                <input type="text" id="field-expiry" class="form-input card-input" placeholder="MM/AA" maxlength="5" required autocomplete="cc-exp">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="field-cvv">CVV *</label>
+                <input type="password" id="field-cvv" class="form-input card-input" placeholder="•••" maxlength="4" required autocomplete="cc-csc">
+              </div>
+            </div>
+
+            <div class="magic-cards-hint">
+              🧪 <strong>Tarjetas de Prueba:</strong><br>
+              ✅ <strong>4242 4242 4242 4242</strong> → Siempre aprobada<br>
+              ❌ <strong>4000 0000 0000 0002</strong> → Siempre rechazada<br>
+              Cualquier fecha futura y CVV de 3 dígitos funcionan.
+            </div>
+
+            <div class="security-banner">
+              🔒 Transacción cifrada con TLS 1.3. Helena Pay Gateway v2.1
+            </div>
+          </div>
+        </div>
+
+        <!-- Swarm Activity Log -->
+        <div class="swarm-log-panel">
+          <div class="swarm-log-header">
+            <div class="live-dot"></div>
+            🤖 SWARM ACTIVITY LOG — Agentes en Tiempo Real
+          </div>
+          <div class="swarm-log" id="swarm-log">
+            <div class="log-entry log-info">
+              <span class="log-time">--:--:--</span>
+              <span class="log-icon">🧠</span>
+              <div class="log-content">
+                <span class="log-agent">Orquestador Central</span>
+                <span class="log-msg">Sistema listo. Esperando inicio del flujo de compra...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button class="btn btn-primary btn-lg w-full" id="pay-btn" style="margin-top:var(--space-xl)">
+          🔒 Confirmar y Pagar
+        </button>
+      </div>
+
+      <!-- RIGHT: Order Summary -->
+      <div class="order-summary-panel">
+        <div class="glass-panel" style="padding:var(--space-xl)">
+          <h3 style="font-family:var(--font-display);color:var(--gold);margin-bottom:var(--space-lg)">📦 Resumen del Pedido</h3>
+          <div class="summary-items" id="summary-items">
+            <div style="color:var(--text-muted);font-size:0.88rem;text-align:center;padding:var(--space-lg)">
+              Cargando tu carrito...
+            </div>
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-row">
+            <span class="summary-label">Subtotal</span>
+            <span class="summary-value" id="summary-subtotal">S/ 0.00</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Envío</span>
+            <span class="summary-value" style="color:var(--success)">Gratis ✓</span>
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-row total">
+            <span class="summary-label">Total</span>
+            <span class="summary-value" id="summary-total">S/ 0.00</span>
+          </div>
+          <div style="margin-top:var(--space-lg);text-align:center;color:var(--text-muted);font-size:0.8rem">
+            🍫 Chocolatería artesanal peruana 🇵🇪
+          </div>
+        </div>
+
+        <!-- Agent Status Panels -->
+        <div style="margin-top:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm)">
+          <div class="agent-status-card glass-card" id="agent-1-status" style="padding:var(--space-md)">
+            <div style="display:flex;align-items:center;gap:var(--space-sm)">
+              <div class="mcp-status-dot pending" id="agent-1-dot"></div>
+              <span style="font-size:0.82rem;color:var(--text-secondary)">👋 Agente de Atención & Triage</span>
+            </div>
+          </div>
+          <div class="agent-status-card glass-card" id="agent-2-status" style="padding:var(--space-md)">
+            <div style="display:flex;align-items:center;gap:var(--space-sm)">
+              <div class="mcp-status-dot pending" id="agent-2-dot"></div>
+              <span style="font-size:0.82rem;color:var(--text-secondary)">📋 Agente Analizador de Pedidos</span>
+            </div>
+          </div>
+          <div class="agent-status-card glass-card" id="agent-3-status" style="padding:var(--space-md)">
+            <div style="display:flex;align-items:center;gap:var(--space-sm)">
+              <div class="mcp-status-dot pending" id="agent-3-dot"></div>
+              <span style="font-size:0.82rem;color:var(--text-secondary)">💳 Agente de Validación de Pagos</span>
+            </div>
+          </div>
+          <div class="agent-status-card glass-card" id="agent-4-status" style="padding:var(--space-md)">
+            <div style="display:flex;align-items:center;gap:var(--space-sm)">
+              <div class="mcp-status-dot pending" id="agent-4-dot"></div>
+              <span style="font-size:0.82rem;color:var(--text-secondary)">🚚 Agente de Operaciones & Logística</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- SCRIPTS -->
+<script src="js/config.js"></script>
+<script src="js/state.js"></script>
+<script src="js/geminiAPI.js"></script>
+<script src="js/mcp/postgresMCP.js"></script>
+<script src="js/mcp/paymentMCP.js"></script>
+<script src="js/mcp/mapsMCP.js"></script>
+<script src="js/mcp/emailMCP.js"></script>
+<script src="js/agents/frontAgent.js"></script>
+<script src="js/agents/orderAgent.js"></script>
+<script src="js/agents/paymentAgent.js"></script>
+<script src="js/agents/logisticsAgent.js"></script>
+<script src="js/orchestrator.js"></script>
+<script src="js/catalog.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/geminiConfig.js"></script>
+<script src="js/mapPicker.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  GeminiConfig.init();
+  UI.initNavbar();
+
+  // ── Botón de mapa — Event listener seguro ───────────────────
+  const openMapBtn = document.getElementById('open-map-btn');
+  if (openMapBtn) {
+    openMapBtn.addEventListener('click', () => {
+      if (typeof window.MapPicker !== 'undefined' && typeof window.MapPicker.open === 'function') {
+        window.MapPicker.open(function(loc) {
+          const addrField = document.getElementById('field-address');
+          if (addrField) {
+            addrField.value = loc.address;
+            addrField.dispatchEvent(new Event('input'));
+          }
+        });
+      } else {
+        console.error('MapPicker no está disponible aún.');
+        alert('El selector de mapa no está listo. Por favor recarga la página.');
+      }
+    });
+  }
+
+
+  // ── Renderizar resumen del pedido ───────────────────────
+  function renderSummary() {
+    const items = SessionState.cart;
+    const summaryItems = document.getElementById('summary-items');
+    const subtotalEl = document.getElementById('summary-subtotal');
+    const totalEl = document.getElementById('summary-total');
+
+    if (!items || items.length === 0) {
+      summaryItems.innerHTML = `
+        <div style="text-align:center;color:var(--text-muted);padding:var(--space-lg)">
+          <div style="font-size:2rem;margin-bottom:var(--space-sm)">🛒</div>
+          <div>Tu carrito está vacío.</div>
+          <a href="index.html" style="color:var(--gold);text-decoration:none;font-size:0.88rem">← Volver al catálogo</a>
+        </div>`;
+      return;
+    }
+
+    summaryItems.innerHTML = items.map(item => `
+      <div class="summary-item">
+        <img src="${item.image}" alt="${item.name}" class="summary-item-img">
+        <div class="summary-item-info">
+          <div class="summary-item-name">${item.name}</div>
+          <div class="summary-item-qty">x${item.quantity}</div>
+        </div>
+        <div class="summary-item-price">S/ ${item.subtotal.toLocaleString('es-PE')}</div>
+      </div>
+    `).join('');
+
+    const total = SessionState.getCartTotal();
+    if (subtotalEl) subtotalEl.textContent = `S/ ${total.toLocaleString('es-PE')}`;
+    if (totalEl)    totalEl.textContent = `S/ ${total.toLocaleString('es-PE')}`;
+  }
+
+  renderSummary();
+  SessionState.on('cart:update', renderSummary);
+
+  // ── Tarjeta de crédito interactiva ───────────────────────
+  const cardNumberInput = document.getElementById('field-card-number');
+  const cardHolderInput = document.getElementById('field-card-holder');
+  const expiryInput = document.getElementById('field-expiry');
+  const cvvInput = document.getElementById('field-cvv');
+  const creditCard = document.getElementById('credit-card');
+
+  cardNumberInput.addEventListener('input', e => {
+    let v = e.target.value.replace(/\D/g, '').slice(0,16);
+    e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
+    document.getElementById('card-number-display').textContent =
+      (v + '•'.repeat(16 - v.length)).replace(/(.{4})/g, '$1 ').trim();
+  });
+
+  cardHolderInput.addEventListener('input', e => {
+    const v = e.target.value.toUpperCase().slice(0,26);
+    document.getElementById('card-holder-display').textContent = v || 'NOMBRE APELLIDO';
+  });
+
+  expiryInput.addEventListener('input', e => {
+    let v = e.target.value.replace(/\D/g, '').slice(0,4);
+    if (v.length >= 2) v = v.slice(0,2) + '/' + v.slice(2);
+    e.target.value = v;
+    document.getElementById('card-expiry-display').textContent = v || 'MM/AA';
+  });
+
+  cvvInput.addEventListener('focus', () => creditCard.classList.add('flipped'));
+  cvvInput.addEventListener('blur',  () => creditCard.classList.remove('flipped'));
+  cvvInput.addEventListener('input', e => {
+    document.getElementById('card-cvv-display').textContent =
+      '•'.repeat(Math.min(e.target.value.length, 4)) || '•••';
+  });
+
+  // ── Swarm Log listener ───────────────────────────────────
+  SessionState.on('log:new', entry => UI.appendSwarmLog(entry));
+
+  // ── Agent status visual ──────────────────────────────────
+  const agentDotMap = {
+    'Agente de Atención Web':            'agent-1-dot',
+    'Agente Analizador de Pedidos':      'agent-2-dot',
+    'Agente de Validación de Pagos':     'agent-3-dot',
+    'Agente de Operaciones y Logística': 'agent-4-dot'
+  };
+
+  SessionState.on('agent:change', ({ agent }) => {
+    // Resetear todos
+    Object.values(agentDotMap).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.className = 'mcp-status-dot pending'; }
+    });
+    // Activar actual
+    const dotId = agentDotMap[agent];
+    if (dotId) {
+      const el = document.getElementById(dotId);
+      if (el) { el.className = 'mcp-status-dot active'; }
+    }
+    // Actualizar step
+    const stepMap = {
+      'Agente de Atención Web': 1,
+      'Agente Analizador de Pedidos': 2,
+      'Agente de Validación de Pagos': 3,
+      'Agente de Operaciones y Logística': 4
+    };
+    const stepNum = stepMap[agent];
+    if (stepNum) UI.updateStep(stepNum);
+  });
+
+  // ── Flow event handlers ──────────────────────────────────
+  SessionState.on('flow:step', ({ step, label }) => {
+    document.getElementById('flow-status-text').textContent =
+      `Agente ${step}: ${['Triage','Validando Pedido','Procesando Pago','Calculando Entrega'][step-1]}...`;
+    document.getElementById('flow-sub-text').textContent =
+      `Llamando a servidores MCP...`;
+  });
+
+  SessionState.on('flow:payment_rejected', result => {
+    document.getElementById('flow-overlay').classList.remove('active');
+    document.getElementById('payment-error-box').classList.add('visible');
+    document.getElementById('payment-error-msg').textContent = result.motivo || 'El banco no autorizó la transacción.';
+    document.getElementById('pay-btn').disabled = false;
+    document.getElementById('pay-btn').textContent = '🔒 Reintentar Pago';
+    // Marcar dot como error
+    const d3 = document.getElementById('agent-3-dot');
+    if (d3) d3.className = 'mcp-status-dot error';
+    UI.showToast('Pago rechazado. Intenta con otra tarjeta.', 'error', 5000);
+  });
+
+  SessionState.on('flow:completed', finalResponse => {
+    // Guardar respuesta para la página de éxito
+    sessionStorage.setItem('helena_order_result', JSON.stringify(finalResponse));
+    document.getElementById('flow-status-text').textContent = '¡Pedido confirmado! Redirigiendo...';
+    // Marcar todos los dots como success
+    Object.values(agentDotMap).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.className = 'mcp-status-dot success';
+    });
+    // Completar steps
+    document.querySelectorAll('.step').forEach(el => {
+      el.classList.remove('active');
+      el.classList.add('done');
+    });
+    setTimeout(() => { window.location.href = 'success.html'; }, 1800);
+  });
+
+  SessionState.on('flow:error', ({ agent, result }) => {
+    document.getElementById('flow-overlay').classList.remove('active');
+    document.getElementById('pay-btn').disabled = false;
+    document.getElementById('pay-btn').textContent = '🔒 Reintentar';
+    UI.showToast(`Error en ${agent}: ${result.error || 'Error desconocido'}`, 'error', 5000);
+  });
+
+  SessionState.on('flow:critical_error', ({ error }) => {
+    document.getElementById('flow-overlay').classList.remove('active');
+    document.getElementById('pay-btn').disabled = false;
+    document.getElementById('pay-btn').textContent = '🔒 Reintentar';
+    UI.showToast(`Error crítico: ${error}`, 'error', 6000);
+  });
+
+  // ── Botón de pago ────────────────────────────────────────
+  document.getElementById('pay-btn').addEventListener('click', async () => {
+    // Ocultar error previo
+    document.getElementById('payment-error-box').classList.remove('visible');
+
+    // Activar overlay
+    const overlay = document.getElementById('flow-overlay');
+    overlay.classList.add('active');
+    document.getElementById('pay-btn').disabled = true;
+
+    // Recoger datos del formulario
+    const formData = {
+      name:    document.getElementById('field-name').value,
+      email:   document.getElementById('field-email').value,
+      phone:   document.getElementById('field-phone').value,
+      address: document.getElementById('field-address').value
+    };
+
+    const paymentData = {
+      cardNumber: document.getElementById('field-card-number').value,
+      cardHolder: document.getElementById('field-card-holder').value,
+      expiry:     document.getElementById('field-expiry').value,
+      cvv:        document.getElementById('field-cvv').value
+    };
+
+    // Si carrito vacío, agregar demo
+    if (SessionState.cart.length === 0) {
+      const { CATALOG } = window;
+      if (CATALOG && CATALOG[0]) SessionState.addCartItem(CATALOG[0], 2);
+      if (CATALOG && CATALOG[4]) SessionState.addCartItem(CATALOG[4], 1);
+      renderSummary();
+    }
+
+    // Iniciar flujo del enjambre
+    await Orchestrator.startCheckoutFlow(formData, paymentData);
+  });
+});
+</script>
+</body>
+</html>
