@@ -53,14 +53,15 @@ def get_llm() -> ChatGoogleGenerativeAI:
                 "GEMINI_API_KEY no configurada. "
                 "Añade tu clave en backend-python/.env"
             )
+        model_name = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
         _llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash",
+            model=model_name,
             google_api_key=api_key,
             temperature=0.7,
             max_output_tokens=512,
             max_retries=1,  # Evita bloqueos prolongados por cuotas excedidas
         )
-        logger.info("✅ LLM Gemini inicializado")
+        logger.info(f"✅ LLM Gemini ({model_name}) inicializado")
     return _llm
 
 
@@ -68,6 +69,23 @@ def _append_path(state: AgentState, node_name: str) -> list[str]:
     path = list(state.get("node_path", []))
     path.append(node_name)
     return path
+
+
+def _extract_text(content: Any) -> str:
+    """Extrae el contenido de texto si `content` viene como una lista de partes."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        text_parts = []
+        for part in content:
+            if isinstance(part, str):
+                text_parts.append(part)
+            elif isinstance(part, dict) and "text" in part:
+                text_parts.append(part["text"])
+            elif hasattr(part, "text"):
+                text_parts.append(part.text)
+        return "".join(text_parts)
+    return str(content)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -147,7 +165,7 @@ Responde usando el contexto anterior cuando sea relevante."""
             HumanMessage(content=prompt_with_context),
         ]
         response = llm.invoke(messages)
-        agent_response = response.content
+        agent_response = _extract_text(response.content)
     except Exception as e:
         logger.error(f"[Node] info_agent LLM error: {e}")
         # Fallback inteligente
@@ -225,7 +243,7 @@ Mensaje del cliente: {message}"""
         lc_messages.append(HumanMessage(content=prompt_with_context))
 
         response = llm.invoke(lc_messages)
-        agent_response = response.content
+        agent_response = _extract_text(response.content)
     except Exception as e:
         logger.error(f"[Node] front_agent LLM error: {e}")
         agent_response = _fallback_visitante(message, rag_result.context)
@@ -510,7 +528,7 @@ Responde de forma clara y estructurada."""
             HumanMessage(content=prompt),
         ]
         response = llm.invoke(messages_lc)
-        agent_response = response.content
+        agent_response = _extract_text(response.content)
     except Exception as e:
         logger.error(f"[Node] admin_agent LLM error: {e}")
         agent_response = f"📊 Panel Admin — {len(PEDIDOS_DB)} pedidos | Stock: {sum(v['cantidad'] for v in STOCK_DB.values())} unidades totales"

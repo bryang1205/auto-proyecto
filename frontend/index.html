@@ -197,7 +197,7 @@
       <div class="chat-avatar-header">🍫</div>
       <div class="chat-agent-info">
         <span class="chat-agent-name">Asistente Helena</span>
-        <span class="chat-agent-status">En línea • Agente de Atención</span>
+        <span class="chat-agent-status" id="chat-agent-status">En línea • Agente de Atención</span>
       </div>
     </div>
     <div class="chat-messages" id="chat-messages"></div>
@@ -214,6 +214,7 @@
   <script src="js/config.js"></script>
   <script src="js/state.js"></script>
   <script src="js/geminiAPI.js"></script>
+  <script src="js/geminiConfig.js"></script>
   <script src="js/mcp/postgresMCP.js"></script>
   <script src="js/mcp/paymentMCP.js"></script>
   <script src="js/mcp/mapsMCP.js"></script>
@@ -225,7 +226,6 @@
   <script src="js/orchestrator.js"></script>
   <script src="js/catalog.js"></script>
   <script src="js/ui.js"></script>
-  <script src="js/geminiConfig.js"></script>
   <script>
     // ── Inicialización ──────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', async () => {

@@ -112,8 +112,22 @@ app = FastAPI(
 origins = [
     "http://localhost:8080",
     "http://127.0.0.1:8080",
+    "http://[::1]:8080",        # IPv6 loopback para python http.server
     "http://localhost:5500",   # Live Server VS Code
     "http://127.0.0.1:5500",
+    "http://[::1]:5500",        # IPv6 loopback para Live Server
+    "http://localhost:5501",   # Live Server alternativo
+    "http://127.0.0.1:5501",
+    "http://[::1]:5501",
+    "http://localhost:3000",   # React / Next.js dev
+    "http://127.0.0.1:3000",
+    "http://[::1]:3000",
+    "http://localhost:5173",   # Vite dev
+    "http://127.0.0.1:5173",
+    "http://[::1]:5173",
+    "http://localhost:4200",   # Angular dev
+    "http://127.0.0.1:4200",
+    "http://[::1]:4200",
     os.getenv("FRONTEND_ORIGIN", ""),
 ]
 origins = [o for o in origins if o]  # Limpiar vacíos
