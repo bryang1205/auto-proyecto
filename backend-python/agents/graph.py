@@ -10,32 +10,38 @@ Estructura del grafo:
   START
     │
     ▼
-  [classify_profile]
+  [validate_input]
     │
-    ├── "visitante" ──▶ [info_agent] ──────────────────────▶ END
+    ├── válido ───────────▶ [classify_profile]
+    │                          │
+    │                          ├── "visitante" ──▶ [info_agent] ──────────▶ END
+    │                          │
+    │                          ├── "comprador" (solo chat) ──▶ [front_agent] ─▶ END
+    │                          │
+    │                          ├── "comprador" (checkout) ──▶ [front_agent]
+    │                          │                                    │
+    │                          │                              [order_agent]
+    │                          │                                    │
+    │                          │                              [payment_agent]
+    │                          │                                    │
+    │                          │                         aprobado ──┤
+    │                          │                                    ▼
+    │                          │                            [logistics_agent] ──▶ END
+    │                          │                         rechazado ──▶ END (error)
+    │                          │
+    │                          └── "admin" ──▶ [admin_agent] ──────▶ END
     │
-    ├── "comprador" (solo chat) ──▶ [front_agent] ─────────▶ END
-    │
-    ├── "comprador" (checkout) ──▶ [order_agent]
-    │                                    │
-    │                              [payment_agent]
-    │                                    │
-    │                         aprobado ──┤
-    │                                    ▼
-    │                            [logistics_agent] ────────▶ END
-    │                         rechazado ──▶ END (error)
-    │
-    └── "admin" ──▶ [admin_agent] ───────────────────────▶ END
+    └── inválido ─────────▶ END (error)
 """
 from __future__ import annotations
 
 import logging
-from typing import Literal
 
 from langgraph.graph import END, START, StateGraph
 
-from models.schemas import AgentState, FlowStage
+from models.schemas import AgentState
 from agents.nodes import (
+    node_validate_input,
     node_classify_profile,
     node_info_agent,
     node_front_agent,
@@ -44,67 +50,15 @@ from agents.nodes import (
     node_logistics_agent,
     node_admin_agent,
 )
+from agents.router import (
+    route_after_validation,
+    route_by_profile,
+    route_after_front,
+    route_after_payment,
+    route_after_order,
+)
 
 logger = logging.getLogger(__name__)
-
-
-# ── Funciones de Routing Condicional ─────────────────────────────────────────
-
-def route_by_profile(state: AgentState) -> Literal[
-    "info_agent", "front_agent", "admin_agent"
-]:
-    """Decide el siguiente nodo según el perfil del usuario."""
-    profile    = state.get("profile", "visitante")
-    flow_stage = state.get("flow_stage", "")
-    order      = state.get("order")
-    payment    = state.get("payment")
-
-    logger.info(f"[Graph] route_by_profile: profile={profile}, flow_stage={flow_stage}")
-
-    if profile == "admin":
-        return "admin_agent"
-
-    if profile == "comprador":
-        # Si hay datos de checkout (customer + payment), va al flujo completo
-        if order and payment:
-            return "front_agent"   # front_agent luego lleva a order_agent
-        return "front_agent"
-
-    # Default: visitante
-    return "info_agent"
-
-
-def route_after_front(state: AgentState) -> Literal[
-    "order_agent", "__end__"
-]:
-    """
-    Decide si el comprador va al flujo de checkout o solo al chat.
-    Si el estado tiene order + payment → flujo de compra completo.
-    """
-    order   = state.get("order")
-    payment = state.get("payment")
-
-    if order and payment and state.get("flow_stage") != FlowStage.TRIAGE.value:
-        logger.info("[Graph] route_after_front → order_agent (flujo checkout)")
-        return "order_agent"
-
-    logger.info("[Graph] route_after_front → END (solo chat)")
-    return "__end__"
-
-
-def route_after_payment(state: AgentState) -> Literal[
-    "logistics_agent", "__end__"
-]:
-    """Decide si el pago fue aprobado → logística, o rechazado → END."""
-    flow_stage = state.get("flow_stage", "")
-    error      = state.get("error")
-
-    if flow_stage == FlowStage.PAYMENT.value and not error:
-        logger.info("[Graph] route_after_payment → logistics_agent (pago aprobado)")
-        return "logistics_agent"
-
-    logger.info("[Graph] route_after_payment → END (pago rechazado)")
-    return "__end__"
 
 
 # ── Construcción del Grafo ────────────────────────────────────────────────────
@@ -112,14 +66,18 @@ def route_after_payment(state: AgentState) -> Literal[
 def build_graph() -> StateGraph:
     """
     Construye y compila el grafo LangGraph completo de Chocolates Helena.
-    
+
+    Flujo:
+        START → validate_input → classify_profile → agente específico → END
+
     Returns:
         CompiledGraph listo para invocar.
     """
     graph = StateGraph(AgentState)
 
     # ── Registrar nodos ───────────────────────────────────────
-    graph.add_node("classify_profile",  node_classify_profile)
+    graph.add_node("validate_input",     node_validate_input)
+    graph.add_node("classify_profile",   node_classify_profile)
     graph.add_node("info_agent",         node_info_agent)
     graph.add_node("front_agent",        node_front_agent)
     graph.add_node("order_agent",        node_order_agent)
@@ -127,8 +85,18 @@ def build_graph() -> StateGraph:
     graph.add_node("logistics_agent",    node_logistics_agent)
     graph.add_node("admin_agent",        node_admin_agent)
 
-    # ── Edge de inicio ────────────────────────────────────────
-    graph.add_edge(START, "classify_profile")
+    # ── Edge de inicio → validación ───────────────────────────
+    graph.add_edge(START, "validate_input")
+
+    # ── Routing desde validate_input ──────────────────────────
+    graph.add_conditional_edges(
+        "validate_input",
+        route_after_validation,
+        {
+            "classify_profile": "classify_profile",
+            "__end__":          END,
+        },
+    )
 
     # ── Routing desde classify_profile ────────────────────────
     graph.add_conditional_edges(
@@ -151,8 +119,15 @@ def build_graph() -> StateGraph:
         },
     )
 
-    # ── Flujo secuencial: order → payment ──────────────────────
-    graph.add_edge("order_agent", "payment_agent")
+    # ── Routing desde order_agent (registro exitoso vs error) ─
+    graph.add_conditional_edges(
+        "order_agent",
+        route_after_order,
+        {
+            "payment_agent": "payment_agent",
+            "__end__":       END,
+        },
+    )
 
     # ── Routing desde payment_agent (aprobado vs rechazado) ────
     graph.add_conditional_edges(
@@ -169,7 +144,7 @@ def build_graph() -> StateGraph:
     graph.add_edge("logistics_agent", END)
     graph.add_edge("admin_agent",     END)
 
-    logger.info("[Graph] Grafo LangGraph compilado con 7 nodos")
+    logger.info("[Graph] Grafo LangGraph compilado con 8 nodos (incluye validate_input)")
     return graph.compile()
 
 

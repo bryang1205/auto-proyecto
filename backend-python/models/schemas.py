@@ -220,3 +220,8 @@ class AgentState(TypedDict, total=False):
     stock_result:   Optional[Dict[str, Any]]
     payment_result: Optional[Dict[str, Any]]
     route_result:   Optional[Dict[str, Any]]
+
+    # ── Campos adicionales para orquestación LangGraph ────────────
+    cart:           Optional[List[Dict[str, Any]]]  # Carrito del usuario (ítems crudos)
+    metadata:       Optional[Dict[str, Any]]        # Metadata adicional del flujo
+    validated:      Optional[bool]                   # Flag de validación del nodo validate_input

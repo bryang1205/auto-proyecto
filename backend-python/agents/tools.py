@@ -85,6 +85,20 @@ class RouteInput(BaseModel):
     direccion_destino: str = Field(description="Dirección de entrega completa")
 
 
+class UpdateProductionInput(BaseModel):
+    pedido_id: str = Field(description="ID único del pedido a actualizar, ej: 'PED-260706-3D292B'")
+
+
+class UpdateDeliveryInput(BaseModel):
+    pedido_id: str = Field(description="ID único del pedido a actualizar, ej: 'PED-260706-3D292B'")
+    ruta_info: str = Field(description="Información de la ruta calculada en formato JSON string o dict serializado")
+
+
+class CancelOrderInput(BaseModel):
+    pedido_id: str = Field(description="ID único del pedido a cancelar")
+    motivo: str = Field(default="Pago rechazado", description="Razón o motivo de la cancelación del pedido")
+
+
 # ── Herramientas LangChain ────────────────────────────────────────────────────
 
 @tool("verificar_stock", args_schema=StockInput)
@@ -97,24 +111,20 @@ def verificar_stock(producto_id: str, cantidad: int) -> dict[str, Any]:
 
     stock = STOCK_DB.get(producto_id)
     if not stock:
-        return {"error": f"Producto '{producto_id}' no encontrado", "disponible": False}
+        return {
+            "disponible":   False,
+            "stock_actual": 0,
+            "solicitado":   cantidad,
+            "producto_id":  producto_id,
+        }
 
     disponible = stock["disponible"] and stock["cantidad"] >= cantidad
-    result = {
-        "disponible":    disponible,
-        "stock_actual":  stock["cantidad"],
-        "solicitado":    cantidad,
-        "producto_id":   producto_id,
-        "precio_unitario": stock["precio"],
+    return {
+        "disponible":   disponible,
+        "stock_actual": stock["cantidad"],
+        "solicitado":   cantidad,
+        "producto_id":  producto_id,
     }
-    if not disponible:
-        result["motivo"] = (
-            "Sin stock suficiente"
-            if stock["cantidad"] > 0
-            else "Producto agotado"
-        )
-    logger.info(f"[Tool] Stock result: {result}")
-    return result
 
 
 @tool("insertar_pedido", args_schema=OrderInput)
@@ -258,23 +268,15 @@ def calcular_ruta_entrega(direccion_destino: str) -> dict[str, Any]:
 
     tracking_id = f"TRK-{uuid.uuid4().hex[:8].upper()}"
 
-    result = {
-        "origen":             ORIGEN["nombre"],
-        "destino":            direccion_destino,
-        "destino_lat":        round(dest_lat, 6),
-        "destino_lng":        round(dest_lng, 6),
-        "distanciaKm":        distancia_km,
-        "tiempoEstimadoMin":  tiempo_min,
-        "tiempoEstimadoTexto": eta_texto,
-        "tracking_id":        tracking_id,
-        "vehiculo":           "Moto de Delivery Helena",
-        "calculado_en":       datetime.now().isoformat(),
-    }
     logger.info(f"[Tool] Ruta: {distancia_km}km, ETA: {eta_texto}")
-    return result
+    return {
+        "tracking_id":          tracking_id,
+        "distanciaKm":          distancia_km,
+        "tiempoEstimadoTexto": eta_texto,
+    }
 
 
-@tool
+@tool("actualizar_pedido_produccion", args_schema=UpdateProductionInput)
 def actualizar_pedido_produccion(pedido_id: str) -> dict[str, Any]:
     """Actualiza el estado del pedido a 'Pagado - En Preparación'."""
     logger.info(f"[Tool] actualizar_pedido_produccion: {pedido_id}")
@@ -285,7 +287,7 @@ def actualizar_pedido_produccion(pedido_id: str) -> dict[str, Any]:
     return {"error": f"Pedido {pedido_id} no encontrado"}
 
 
-@tool
+@tool("actualizar_pedido_entrega", args_schema=UpdateDeliveryInput)
 def actualizar_pedido_entrega(pedido_id: str, ruta_info: str) -> dict[str, Any]:
     """Actualiza el pedido con la ruta de entrega y lo pone 'En Camino'."""
     import json
@@ -302,7 +304,7 @@ def actualizar_pedido_entrega(pedido_id: str, ruta_info: str) -> dict[str, Any]:
     return {"error": f"Pedido {pedido_id} no encontrado"}
 
 
-@tool
+@tool("cancelar_pedido", args_schema=CancelOrderInput)
 def cancelar_pedido(pedido_id: str, motivo: str = "Pago rechazado") -> dict[str, Any]:
     """Cancela un pedido y restaura el stock."""
     logger.info(f"[Tool] cancelar_pedido: {pedido_id} | {motivo}")
@@ -324,15 +326,15 @@ def cancelar_pedido(pedido_id: str, motivo: str = "Pago rechazado") -> dict[str,
     return {"pedido_id": pedido_id, "status": "Cancelado", "success": True}
 
 
-@tool
+@tool("obtener_todos_pedidos")
 def obtener_todos_pedidos() -> list[dict]:
-    """Retorna todos los pedidos (para el agente admin)."""
+    """Retorna todos los pedidos registrados en el sistema (para el agente admin)."""
     return list(PEDIDOS_DB.values())
 
 
-@tool
+@tool("obtener_stock_actual")
 def obtener_stock_actual() -> dict[str, Any]:
-    """Retorna el stock actual de todos los productos (para el agente admin)."""
+    """Retorna el stock e inventario actual de todos los productos de Chocolates Helena (para el agente admin)."""
     return {
         pid: {
             "disponible": data["disponible"],

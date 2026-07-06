@@ -26,6 +26,27 @@ class ProfileClassification(BaseModel):
     )
 
 
+from langchain_core.prompts import ChatPromptTemplate
+
+_PROFILE_SYSTEM = (
+    "Eres un clasificador de perfiles experto para el sistema Chocolates Helena.\n"
+    "Debes clasificar la intención del usuario basándote en su mensaje."
+)
+
+_PROFILE_HUMAN = (
+    "Analiza el siguiente mensaje del usuario y clasifica su perfil en uno de estos tres valores:\n"
+    "- 'visitante': Si el usuario saluda, pregunta información general, historia del cacao, maridaje, etc., sin intención de compra inmediata.\n"
+    "- 'comprador': Si el usuario quiere comprar, ordenar, agregar al carrito, cotizar para comprar, o proceder al pago.\n"
+    "- 'admin': Si el usuario solicita stock, inventario, reportes de ventas, ver pedidos del sistema o gestionar el dashboard.\n\n"
+    "Mensaje del usuario: \"{user_message}\""
+)
+
+_PROFILE_CLASSIFIER_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", _PROFILE_SYSTEM),
+    ("human", _PROFILE_HUMAN),
+])
+
+
 # ── Señales de detección para cada perfil ────────────────────────────────────
 
 _COMPRADOR_SIGNALS = re.compile(
@@ -70,7 +91,7 @@ def classify_user_profile(
     """
     # 1. Admin por token
     if admin_token and admin_token == _ADMIN_TOKEN:
-        logger.info(f"[Profiles] Perfil: ADMIN (token válido)")
+        logger.info("[Profiles] Perfil: ADMIN (token válido)")
         return UserProfile.ADMIN
 
     # 2. Tipo explícito del frontend (ya validado por Pydantic, ignorando default 'visitante' para permitir clasificación por mensaje)
@@ -92,14 +113,8 @@ def classify_user_profile(
         try:
             logger.info("[Profiles] Intentando clasificar perfil con LLM Structured Output...")
             structured_llm = llm.with_structured_output(ProfileClassification)
-            prompt = f"""Analiza el siguiente mensaje del usuario y clasifica su perfil en uno de estos tres valores:
-- 'visitante': Si el usuario saluda, pregunta información general, historia del cacao, maridaje, etc., sin intención de compra inmediata.
-- 'comprador': Si el usuario quiere comprar, ordenar, agregar al carrito, cotizar para comprar, o proceder al pago.
-- 'admin': Si el usuario solicita stock, inventario, reportes de ventas, ver pedidos del sistema o gestionar el dashboard.
-
-Mensaje del usuario: "{user_message}"
-"""
-            classification = structured_llm.invoke(prompt)
+            classifier_chain = _PROFILE_CLASSIFIER_PROMPT | structured_llm
+            classification = classifier_chain.invoke({"user_message": user_message})
             profile_val = classification.profile
             logger.info(f"[Profiles] Clasificación LLM exitosa: '{profile_val}' | Explicación: {classification.explanation}")
             return UserProfile(profile_val)

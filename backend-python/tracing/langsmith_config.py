@@ -2,12 +2,16 @@
 ══════════════════════════════════════════════════════════════════
 Chocolates Helena — Configuración LangSmith
 Trazabilidad y monitoreo de todas las ejecuciones del sistema.
+
+IMPORTANTE: Este módulo NO importa ningún componente de LangChain.
+Solo manipula os.environ. Debe ejecutarse ANTES de los imports
+de langchain-core, langgraph, etc.
 ══════════════════════════════════════════════════════════════════
 """
 from __future__ import annotations
 
-import os
 import logging
+import os
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -16,6 +20,11 @@ logger = logging.getLogger(__name__)
 def configure_langsmith() -> bool:
     """
     Configura LangSmith para trazabilidad automática.
+
+    Establece las variables de entorno que langchain-core leerá
+    al momento de su primer import para activar el tracing.
+
+    DEBE ejecutarse ANTES de importar langchain-core, langgraph, etc.
 
     LangSmith captura automáticamente:
     - Todas las llamadas a LLMs (Gemini)
@@ -26,35 +35,36 @@ def configure_langsmith() -> bool:
     Returns:
         True si LangSmith está configurado correctamente, False si falta la key.
     """
-    api_key  = os.getenv("LANGCHAIN_API_KEY", "")
-    project  = os.getenv("LANGCHAIN_PROJECT", "chocolates-helena")
+    api_key = os.getenv("LANGCHAIN_API_KEY", "")
+    project = os.getenv("LANGCHAIN_PROJECT", "chocolates-helena")
     endpoint = os.getenv("LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
-    tracing  = os.getenv("LANGCHAIN_TRACING_V2", "false").lower()
 
     if not api_key or api_key.startswith("lsv2_pt_TU_CLAVE"):
         logger.warning(
-            "⚠️  LangSmith no configurado. "
-            "Las trazas no serán enviadas a smith.langchain.com. "
-            "Para activar: añade LANGCHAIN_API_KEY en .env"
+            "LangSmith no configurado. "
+            "Las trazas no seran enviadas a smith.langchain.com. "
+            "Para activar: anade LANGCHAIN_API_KEY en .env"
         )
         os.environ["LANGCHAIN_TRACING_V2"] = "false"
         return False
 
-    # Activar tracing y propagar todas las variables de entorno
+    # Forzar las variables de entorno ANTES de que langchain-core las lea.
+    # langchain-core usa os.environ directamente para decidir si activa tracing.
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
-    os.environ["LANGCHAIN_PROJECT"]    = project
-    os.environ["LANGCHAIN_API_KEY"]    = api_key
-    os.environ["LANGCHAIN_ENDPOINT"]   = endpoint
+    os.environ["LANGCHAIN_PROJECT"] = project
+    os.environ["LANGCHAIN_API_KEY"] = api_key
+    os.environ["LANGCHAIN_ENDPOINT"] = endpoint
 
-    logger.info(f"✅ LangSmith activado. Proyecto: '{project}'")
-    logger.info(f"   Dashboard: https://smith.langchain.com/projects/{project}")
+    logger.info("LangSmith activado. Proyecto: '%s'", project)
+    logger.info("  Dashboard: https://smith.langchain.com/projects/%s", project)
+
     return True
 
 
 def get_langsmith_status() -> dict[str, Any]:
     """Retorna el estado actual de la configuración LangSmith."""
-    api_key   = os.getenv("LANGCHAIN_API_KEY", "")
-    project   = os.getenv("LANGCHAIN_PROJECT", "chocolates-helena")
+    api_key = os.getenv("LANGCHAIN_API_KEY", "")
+    project = os.getenv("LANGCHAIN_PROJECT", "chocolates-helena")
     is_active = (
         os.getenv("LANGCHAIN_TRACING_V2", "false").lower() == "true"
         and bool(api_key)
@@ -84,6 +94,10 @@ def build_run_config(
     - tags      : perfil del usuario + tipo de flujo
     - metadata  : sesión, perfil, versión del sistema
 
+    El config incluye la key `callbacks` para LangSmith >= 0.9.x
+    que requiere pasar el LangChainTracer explícitamente cuando
+    el tracing automático no es suficiente.
+
     Args:
         run_name:   Nombre del run visible en el dashboard de LangSmith.
         session_id: ID de sesión del usuario.
@@ -101,14 +115,33 @@ def build_run_config(
     base_metadata: dict[str, Any] = {
         "session_id":     session_id,
         "profile":        profile,
-        "system_version": "2.0.0",
+        "system_version": "2.1.0",
         "project":        os.getenv("LANGCHAIN_PROJECT", "chocolates-helena"),
     }
     if metadata:
         base_metadata.update(metadata)
 
-    return {
+    config: dict[str, Any] = {
         "run_name": run_name,
         "tags":     base_tags,
         "metadata": base_metadata,
     }
+
+    # Si LangSmith está activo, inyectar el LangChainTracer como callback.
+    # En versiones recientes de langsmith (>=0.9), el tracing automático
+    # usa os.environ, pero pasar el tracer explícitamente garantiza que
+    # las trazas se envíen incluso si el auto-tracing no se activa.
+    if os.getenv("LANGCHAIN_TRACING_V2", "false").lower() == "true":
+        try:
+            from langsmith import Client
+            from langchain_core.tracers import LangChainTracer
+
+            tracer = LangChainTracer(
+                client=Client(),
+                project_name=os.getenv("LANGCHAIN_PROJECT", "chocolates-helena"),
+            )
+            config["callbacks"] = [tracer]
+        except Exception as e:
+            logger.warning("No se pudo crear LangChainTracer: %s", e)
+
+    return config
