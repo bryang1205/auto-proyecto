@@ -1,56 +1,37 @@
 """
-══════════════════════════════════════════════════════════════════
-Chocolates Helena — Knowledge Base (FAISS + Embeddings Locales)
-Crea y persiste el índice vectorial FAISS con los documentos
-del catálogo, FAQs, políticas y más.
-Usa HuggingFace sentence-transformers (local, sin API extra).
-══════════════════════════════════════════════════════════════════
+Chocolates Helena — Knowledge Base (FAISS + Gemini Embeddings)
+Usa Google Gemini para embeddings en lugar de sentence-transformers
+para evitar la dependencia de PyTorch (~2GB RAM).
 """
 from __future__ import annotations
 
-import os
 import logging
 from pathlib import Path
 
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 from .documents import get_all_documents
 
 logger = logging.getLogger(__name__)
 
-# ── Configuración ─────────────────────────────────────────────────────────────
-
-# Modelo de embeddings local (no requiere API key)
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-
-# Ruta donde se guarda el índice FAISS persistente
 FAISS_INDEX_PATH = Path(__file__).parent / "faiss_index"
 
-# Singleton del vector store
 _vector_store: FAISS | None = None
-_embeddings: HuggingFaceEmbeddings | None = None
+_embeddings: GoogleGenerativeAIEmbeddings | None = None
 
 
-def get_embeddings() -> HuggingFaceEmbeddings:
-    """Devuelve el modelo de embeddings (singleton)."""
+def get_embeddings() -> GoogleGenerativeAIEmbeddings:
     global _embeddings
     if _embeddings is None:
-        logger.info(f"Cargando modelo de embeddings: {EMBEDDING_MODEL}")
-        _embeddings = HuggingFaceEmbeddings(
-            model_name=EMBEDDING_MODEL,
-            model_kwargs={"device": "cpu"},
-            encode_kwargs={"normalize_embeddings": True},
+        logger.info("Cargando embeddings: Gemini text-embedding-004")
+        _embeddings = GoogleGenerativeAIEmbeddings(
+            model="models/text-embedding-004"
         )
     return _embeddings
 
 
 def build_vector_store(force_rebuild: bool = False) -> FAISS:
-    """
-    Construye o carga el índice FAISS.
-    - Si existe el índice y no se fuerza rebuild, lo carga desde disco.
-    - Si no existe o se fuerza rebuild, lo crea desde los documentos.
-    """
     global _vector_store
 
     if _vector_store is not None and not force_rebuild:
@@ -58,7 +39,6 @@ def build_vector_store(force_rebuild: bool = False) -> FAISS:
 
     embeddings = get_embeddings()
 
-    # Intentar cargar índice existente
     if FAISS_INDEX_PATH.exists() and not force_rebuild:
         logger.info(f"Cargando índice FAISS desde: {FAISS_INDEX_PATH}")
         try:
@@ -67,19 +47,17 @@ def build_vector_store(force_rebuild: bool = False) -> FAISS:
                 embeddings,
                 allow_dangerous_deserialization=True,
             )
-            logger.info(f"Índice FAISS cargado con éxito.")
+            logger.info("Índice FAISS cargado con éxito.")
             return _vector_store
         except Exception as e:
             logger.warning(f"No se pudo cargar el índice FAISS: {e}. Reconstruyendo...")
 
-    # Construir nuevo índice
     logger.info("Construyendo nuevo índice FAISS desde documentos...")
     documents = get_all_documents()
     logger.info(f"Indexando {len(documents)} documentos...")
 
     _vector_store = FAISS.from_documents(documents, embeddings)
 
-    # Persistir en disco
     FAISS_INDEX_PATH.mkdir(parents=True, exist_ok=True)
     _vector_store.save_local(str(FAISS_INDEX_PATH))
     logger.info(f"Índice FAISS guardado en: {FAISS_INDEX_PATH}")
@@ -88,5 +66,4 @@ def build_vector_store(force_rebuild: bool = False) -> FAISS:
 
 
 def get_vector_store() -> FAISS:
-    """Devuelve el vector store (lo construye si no existe)."""
     return build_vector_store()
