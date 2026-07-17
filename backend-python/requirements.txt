@@ -12,9 +12,7 @@ langsmith>=0.9.0
 
 # Vector Store (RAG)
 faiss-cpu>=1.7.4
-
-# Embeddings (locales, sin necesidad de API extra)
-sentence-transformers>=2.7.0
+langchain-huggingface>=0.1.0
 
 # Pydantic v2 — Validación y caché de datos
 pydantic>=2.0.0
