@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 # ── Configuración ─────────────────────────────────────────────────────────────
 
 # Modelo de embeddings local (no requiere API key)
-EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 # Ruta donde se guarda el índice FAISS persistente
 FAISS_INDEX_PATH = Path(__file__).parent / "faiss_index"
